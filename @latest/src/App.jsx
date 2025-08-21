@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react'; // Import useState
 import {
   AppBar,
   Toolbar,
@@ -21,6 +21,64 @@ import GitHubIcon from '@mui/icons-material/GitHub';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
 function App() {
+  // State to manage form input values
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    message: '',
+  });
+
+  // Handle input changes (controlled components)
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
+
+  // Handle form submission
+  const handleSubmit = async (event) => {
+    event.preventDefault(); // Corrected typo: preventDefult() to preventDefault()
+
+    // Define your Django API endpoint URL
+    // IMPORTANT: For local development, use your Django development server URL:
+    // const DJANGO_API_URL = 'http://127.0.0.1:8000/api/contact/';
+    // For production deployment, you MUST change this to your deployed Django backend URL:
+    const DJANGO_API_URL = 'http://127.0.0.1:8000/api/contact/'; // Placeholder, change for production!
+
+    try {
+      const response = await fetch(DJANGO_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // If you were using Django's CSRF for session-based auth, you'd need to send a token here.
+          // For a simple public API endpoint like a contact form, DRF's default
+          // 'AllowAny' permission usually means no CSRF token is strictly needed for POST from a different origin.
+        },
+        body: JSON.stringify(formData), // Send the form data as JSON
+      });
+
+      if (response.ok) { // Corrected: Response.ok to response.ok
+        // If the response is successful (status 200-299)
+        const result = await response.json();
+        alert(result.message || 'Message sent successfully!'); // Show success message from backend
+        // Clear the form after successful submission
+        setFormData({ name: '', email: '', message: '' });
+      } else { // Added missing opening curly brace for else block
+        // If the response is an error
+        const errorData = await response.json();
+        console.error('API Error:', errorData);
+        alert(`Failed to send message. Please check the form and try again.\nDetails: ${JSON.stringify(errorData)}`);
+      }
+    } catch (error) {
+      // Handle network errors (e.g., server not running, CORS issues)
+      console.error('Network Error:', error);
+      alert('There was a problem connecting to the server. Please try again later.');
+    }
+  };
+
+
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
 
@@ -105,7 +163,7 @@ function App() {
               animation: 'fadeInUp 1s ease-out forwards',
               opacity: 0,
               '@keyframes fadeInUp': {
-                from: { opacity: 0, transform: 'translateY(20px)' },
+                from: { opacity: 0, transform: 'translateY(-20px)' },
                 to: { opacity: 1, transform: 'translateY(0)' },
               }
             }}
@@ -147,7 +205,7 @@ function App() {
       <Box id='about' sx={{ py: 10, bgcolor: 'background.paper' }}>
         <Container maxWidth='md'>
           <Typography variant='h4' component='h2' align='center' sx={{ fontWeight: 'bold', color: 'text.primary', mb: 6 }}>
-            About Me 
+            About Me 🚀
           </Typography>
           <Grid container spacing={4} alignItems="center">
             <Grid item xs={12} md={6}>
@@ -220,12 +278,12 @@ function App() {
                     >
                       Code <GitHubIcon sx={{ ml: 0.5, fontSize: '18px' }} />
                     </Link>
-                   
+
                   </Box>
                 </CardContent>
               </Card>
             </Grid>
-            
+
           </Grid>
         </Container>
       </Box>
@@ -237,6 +295,7 @@ function App() {
           </Typography>
           <Box
             component='form'
+            onSubmit={handleSubmit}
             sx={{
               bgcolor: 'grey.50',
               p: 4,
@@ -249,29 +308,41 @@ function App() {
             <TextField
               fullWidth
               label='Name'
+              name='name' // Added name attribute
+              value={formData.name} // Added value binding
+              onChange={handleChange} // Added onChange handler
               variant='outlined'
               margin='normal'
               sx={{ mb: 2 }}
               InputProps={{ sx: { borderRadius: '8px' } }}
+              required // Added required attribute
             />
             <TextField
               fullWidth
               label='Email'
+              name='email' // Added name attribute
+              value={formData.email} // Added value binding
+              onChange={handleChange} // Added onChange handler
               type='email'
               variant='outlined'
               margin='normal'
               sx={{ mb: 2 }}
               InputProps={{ sx: { borderRadius: '8px' } }}
+              required // Added required attribute
             />
             <TextField
               fullWidth
               label='Message'
+              name='message' // Added name attribute
+              value={formData.message} // Added value binding
+              onChange={handleChange} // Added onChange handler
               multiline
               rows={6}
               variant='outlined'
               margin='normal'
               sx={{ mb: 3 }}
               InputProps={{ sx: { borderRadius: '8px' } }}
+              required // Added required attribute
             />
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
               <Button
